@@ -48,32 +48,34 @@ index ddbb5d6..c06fffc 100644
          view.settings.javaScriptCanOpenWindowsAutomatically = value
      }
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index 28ef443..0068c88 100644
+index 28ef443..6f2208a 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-@@ -181,6 +181,11 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
+@@ -181,6 +181,12 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
  
      }
  
 +    @ReactProp(name = "injectJavaScriptObject")
-+    public void setInjectJavaScriptObject(RNCWebView view, @Nullable String value) {
-+        mRNCWebViewManagerImpl.setInjectJavaScriptObject(view, value);
++    public void setInjectJavaScriptObject(RNCWebView view, @Nullable ReadableMap value) {
++        JSONObject jsonValue = new JSONObject(value.toHashMap());
++        mRNCWebViewManagerImpl.setInjectJavaScriptObject(view, jsonValue.toString());
 +    }
 +
      @Override
      @ReactProp(name = "javaScriptCanOpenWindowsAutomatically")
      public void setJavaScriptCanOpenWindowsAutomatically(RNCWebView view, boolean value) {
 diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index 4c03b51..20ab3e0 100644
+index 4c03b51..c1642c8 100644
 --- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-@@ -154,6 +154,11 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView> {
+@@ -154,6 +154,12 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView> {
  
      }
  
 +    @ReactProp(name = "injectJavaScriptObject")
-+    public void setInjectJavaScriptObject(RNCWebView view, @Nullable String value) {
-+        mRNCWebViewManagerImpl.setInjectJavaScriptObject(view, value);
++    public void setInjectJavaScriptObject(RNCWebView view, @Nullable ReadableMap value) {
++        JSONObject jsonValue = new JSONObject(value.toHashMap());
++        mRNCWebViewManagerImpl.setInjectJavaScriptObject(view, jsonValue.toString());
 +    }
 +
      @ReactProp(name = "javaScriptCanOpenWindowsAutomatically")
