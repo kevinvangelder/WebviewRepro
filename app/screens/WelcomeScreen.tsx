@@ -25,5 +25,6 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
 
 const $container: ViewStyle = {
   flex: 1,
+  marginTop: 50,
   backgroundColor: colors.background,
 }
