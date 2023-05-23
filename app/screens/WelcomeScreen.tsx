@@ -15,7 +15,7 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
     <View style={$container}>
       <WebView 
         source={{ uri: 'https://vangelder.tech/rn-webview' }}
-        injectJSObject={{
+        injectJavaScriptObject={{
           authToken: 'this-is-my-token',
         }}
       />
