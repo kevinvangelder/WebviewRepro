@@ -1,0 +1,139 @@
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
+index f998614..f12c0a7 100644
+--- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
+@@ -37,6 +37,15 @@ import com.reactnativecommunity.webview.events.TopMessageEvent;
+ import java.io.UnsupportedEncodingException;
+ import java.net.URLEncoder;
+ 
++class JsObject {
++    protected String value;
++    public JsObject(String newValue) {
++        value = newValue;
++    }
++    @JavascriptInterface
++    public String toString() { return value; }
++}
++
+ public class RNCWebView extends WebView implements LifecycleEventListener {
+     protected @Nullable
+     String injectedJS;
+@@ -210,6 +219,13 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+         }
+     }
+ 
++    public void injectJavaScriptObject(String obj) {
++        if (getSettings().getJavaScriptEnabled()) {
++            WebView webView = this;
++            webView.addJavascriptInterface(new JsObject(obj), "injectedObject");
++        }
++    }
++
+     public void onMessage(String message) {
+         ThemedReactContext reactContext = getThemedReactContext();
+         RNCWebView mWebView = this;
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
+index ddbb5d6..c06fffc 100644
+--- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
+@@ -484,6 +484,10 @@ class RNCWebViewManagerImpl {
+         view.injectedJavaScriptBeforeContentLoadedForMainFrameOnly = value
+     }
+ 
++    fun setInjectJavaScriptObject(view: RNCWebView, value: String?) {
++        view.injectJavaScriptObject(value)
++    }
++
+     fun setJavaScriptCanOpenWindowsAutomatically(view: RNCWebView, value: Boolean) {
+         view.settings.javaScriptCanOpenWindowsAutomatically = value
+     }
+diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
+index 28ef443..0068c88 100644
+--- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
++++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
+@@ -181,6 +181,11 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView>
+ 
+     }
+ 
++    @ReactProp(name = "injectJavaScriptObject")
++    public void setInjectJavaScriptObject(RNCWebView view, @Nullable String value) {
++        mRNCWebViewManagerImpl.setInjectJavaScriptObject(view, value);
++    }
++
+     @Override
+     @ReactProp(name = "javaScriptCanOpenWindowsAutomatically")
+     public void setJavaScriptCanOpenWindowsAutomatically(RNCWebView view, boolean value) {
+diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
+index 4c03b51..20ab3e0 100644
+--- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
++++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
+@@ -154,6 +154,11 @@ public class RNCWebViewManager extends SimpleViewManager<RNCWebView> {
+ 
+     }
+ 
++    @ReactProp(name = "injectJavaScriptObject")
++    public void setInjectJavaScriptObject(RNCWebView view, @Nullable String value) {
++        mRNCWebViewManagerImpl.setInjectJavaScriptObject(view, value);
++    }
++
+     @ReactProp(name = "javaScriptCanOpenWindowsAutomatically")
+     public void setJavaScriptCanOpenWindowsAutomatically(RNCWebView view, boolean value) {
+         mRNCWebViewManagerImpl.setJavaScriptCanOpenWindowsAutomatically(view, value);
+diff --git a/node_modules/react-native-webview/apple/RNCWebView.mm b/node_modules/react-native-webview/apple/RNCWebView.mm
+index f664e93..7efe133 100644
+--- a/node_modules/react-native-webview/apple/RNCWebView.mm
++++ b/node_modules/react-native-webview/apple/RNCWebView.mm
+@@ -416,6 +416,10 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
+     }
+ #endif
+ 
++    if (oldViewProps.injectedJavaScriptBeforeContentLoaded != newViewProps.injectedJavaScriptBeforeContentLoaded) {
++        [_view setInjectedJavaScriptBeforeContentLoaded: RCTNSStringFromString(newViewProps.injectedJavaScriptBeforeContentLoaded)];
++    }
++
+     NSMutableDictionary* source = [[NSMutableDictionary alloc] init];
+     if (!newViewProps.newSource.uri.empty()) {
+         [source setValue:RCTNSStringFromString(newViewProps.newSource.uri) forKey:@"uri"];
+diff --git a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
+index 0472b75..36d1d80 100644
+--- a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
++++ b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
+@@ -162,6 +162,7 @@ export interface NativeProps extends ViewProps {
+   thirdPartyCookiesEnabled?: boolean;
+   // Workaround to watch if listener if defined
+   hasOnScroll?: boolean;
++  injectJavaScriptObject?: string;
+   // !Android only
+ 
+   // iOS only
+diff --git a/node_modules/react-native-webview/src/WebView.android.tsx b/node_modules/react-native-webview/src/WebView.android.tsx
+index 6100702..92c0089 100644
+--- a/node_modules/react-native-webview/src/WebView.android.tsx
++++ b/node_modules/react-native-webview/src/WebView.android.tsx
+@@ -64,6 +64,7 @@ const WebViewComponent = forwardRef<{}, AndroidWebViewProps>(({
+   source,
+   nativeConfig,
+   onShouldStartLoadWithRequest: onShouldStartLoadWithRequestProp,
++  injectJavaScriptObject,
+   ...otherProps
+ }, ref) => {
+   const messagingModuleName = useRef<string>(`WebViewMessageHandler${uniqueRef += 1}`).current;
+@@ -204,6 +205,7 @@ const WebViewComponent = forwardRef<{}, AndroidWebViewProps>(({
+     setBuiltInZoomControls={setBuiltInZoomControls}
+     setDisplayZoomControls={setDisplayZoomControls}
+     nestedScrollEnabled={nestedScrollEnabled}
++    injectJavaScriptObject={JSON.stringify(injectJavaScriptObject)}
+     {...nativeConfig?.props}
+   />
+ 
+diff --git a/node_modules/react-native-webview/src/WebViewTypes.ts b/node_modules/react-native-webview/src/WebViewTypes.ts
+index 1a9b5d9..53cb947 100644
+--- a/node_modules/react-native-webview/src/WebViewTypes.ts
++++ b/node_modules/react-native-webview/src/WebViewTypes.ts
+@@ -1219,4 +1219,6 @@ export interface WebViewSharedProps extends ViewProps {
+    * An object that specifies the credentials of a user to be used for basic authentication.
+    */
+   basicAuthCredential?: BasicAuthCredential;
++
++  injectJavaScriptObject?: object;
+ }
